@@ -381,8 +381,18 @@ function parsePlanilha(text) {
     break;
   }
 
-  const teacherCell = linha2.find(c => (c || '').toLowerCase().includes('teacher')) || '';
-  const teacher = teacherCell.replace(/teacher\s*[:\-]?\s*/i, '').trim();
+  // Busca "Teacher:" em QUALQUER celula das primeiras 5 linhas (robusto a colunas vazias intercaladas)
+  let teacher = '';
+  for (let li = 0; li < Math.min(5, rawLines.length); li++) {
+    const cols = splitLine(rawLines[li] || '');
+    for (const c of cols) {
+      if (/teacher/i.test(c)) {
+        const val = c.replace(/teacher\s*[:\-]?\s*/i, '').trim();
+        if (val) { teacher = val; break; }
+      }
+    }
+    if (teacher) break;
+  }
   const headers = linha3.map(h => norm(h));
 
   const alunos = [];
@@ -418,7 +428,7 @@ async function loadDataForConfig(config) {
     const totalKey = parsed2.headers.includes(norm('TOTAL DE AULAS')) ? norm('TOTAL DE AULAS') : null;
     const totalAulasVal = (parsed2.alunos.length > 0 && totalKey) ? n(parsed2.alunos[0][totalKey] || 0) : 0;
 
-    metaTurma = { turma: parsed1.turma, dias: parsed1.dias, teacher: parsed1.teacher, totalAulas: totalAulasVal };
+    metaTurma = { turma: parsed1.turma || parsed2.turma, dias: parsed1.dias || parsed2.dias, teacher: parsed1.teacher || parsed2.teacher, totalAulas: totalAulasVal };
 
     if (habData.length === 0) throw new Error('Nenhum aluno encontrado nesta turma.');
 
@@ -609,28 +619,41 @@ function downloadPDF() {
   element.style.maxWidth = '794px';
   element.style.margin   = '0';
 
-  const opt = {
-    margin:      0,
-    filename:    `${filenameSafe}.pdf`,
-    image:       { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale:       2,
-      useCORS:     true,
-      width:       794,
-      windowWidth: 794,
-      scrollX:     0,
-      scrollY:     -window.scrollY
-    },
-    jsPDF: {
-      unit:        'px',
-      format:      [794, 1123],   // A4 em px @ 96dpi
-      orientation: 'portrait',
-      hotfixes:    ['px_scaling']
-    }
-  };
+  // Captura o canvas primeiro para saber a altura real do conteúdo
+  html2canvas(element, {
+    scale:       2,
+    useCORS:     true,
+    width:       794,
+    windowWidth: 794,
+    scrollX:     0,
+    scrollY:     -window.scrollY
+  }).then(canvas => {
+    const imgW  = 210; // mm - largura A4
+    const ratio = canvas.height / canvas.width;
+    const imgH  = Math.round(imgW * ratio);
 
-  html2pdf().set(opt).from(element).save()
-    .then(restore).catch(restore);
+    const opt = {
+      margin:      0,
+      filename:    `${filenameSafe}.pdf`,
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale:       2,
+        useCORS:     true,
+        width:       794,
+        windowWidth: 794,
+        scrollX:     0,
+        scrollY:     -window.scrollY
+      },
+      jsPDF: {
+        unit:        'mm',
+        format:      [imgW, imgH],
+        orientation: 'portrait'
+      }
+    };
+
+    html2pdf().set(opt).from(element).save()
+      .then(restore).catch(restore);
+  }).catch(restore);
 
   function restore() {
     element.style.width    = origWidth;
