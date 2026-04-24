@@ -39,9 +39,15 @@
     .logo-main span { color: #a78bfa; }
     .divider-v { width: 1px; height: 56px; background: rgba(255,255,255,.2); flex-shrink: 0; }
     .h-nome { font-family: 'DM Serif Display', serif; font-size: 26px; color: #fff; }
-    .h-sub { font-size: 12px; color: #c4b5fd; margin-top: 3px; }
+    .h-sub { font-size: 12px; color: #e5e7eb; margin-top: 3px; } /* mais clara */
+
     .header-right { text-align: right; }
-    .h-lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #a78bfa; }
+    .h-lbl {
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #e9d5ff; /* rótulo bem claro que destaca no roxo escuro */
+    }
     .h-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: #fff; margin-bottom: 4px; }
 
     .body { padding: 24px 28px 26px; }
@@ -490,13 +496,19 @@ function renderStudent() {
   const totalAulas  = metaTurma.totalAulas;
   const presencaPct = totalAulas > 0 ? Math.round(((totalAulas - faltas) / totalAulas) * 100) : 0;
   const assistidas  = totalAulas > 0 ? totalAulas - faltas : '—';
-  const periodo     = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  // agora o período mostrado é só os dias (sem mês/ano)
+  const periodoLabel = metaTurma.dias || '';
 
   document.getElementById('hNome').textContent    = nome;
-  document.getElementById('hPeriod').textContent  = metaTurma.dias ? metaTurma.dias + ' · ' + periodo : periodo;
+  document.getElementById('hPeriod').textContent  = periodoLabel;
   document.getElementById('hTurma').textContent   = metaTurma.turma   || (currentConfig ? currentConfig.label : '—');
   document.getElementById('hTeacher').textContent = metaTurma.teacher || '—';
-  document.getElementById('footerInfo').textContent = (metaTurma.turma || (currentConfig ? currentConfig.label : '')) + ' · ' + periodo;
+
+  // rodapé ainda mostra turma + mês/ano para contexto
+  const periodoRodape = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  document.getElementById('footerInfo').textContent =
+    (metaTurma.turma || (currentConfig ? currentConfig.label : '')) + ' · ' + periodoRodape;
 
   document.getElementById('donutPct').textContent       = totalAulas > 0 ? presencaPct + '%' : '—';
   document.getElementById('statTotal').textContent      = totalAulas || '—';
@@ -603,21 +615,18 @@ function downloadPDF() {
   document.body.classList.add('printing');
 
   const opt = {
-    margin:      [8, 8, 8, 8],
+    margin:      [5, 5, 5, 5],
     filename:    filenameSafe + '.pdf',
     image:       { type: 'jpeg', quality: 0.98 },
     html2canvas: {
-      scale:   1.2,
-      useCORS: true,
-      scrollX: 0,
-      scrollY: -window.scrollY
+      scale:   2,
+      useCORS: true
     },
     jsPDF: {
       unit:        'mm',
       format:      'a4',
       orientation: 'portrait'
-    },
-    pagebreak: { mode: ['css', 'legacy'] }
+    }
   };
 
   html2pdf()
