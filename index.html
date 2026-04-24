@@ -32,13 +32,6 @@
     .page { max-width: 1080px; margin: 0 auto; background: var(--surface); border-radius: var(--radius-lg); box-shadow: 0 4px 32px rgba(80,40,160,.10); overflow: hidden; display: none; }
     .page.visible { display: block; }
 
-    /* Largura fixa usada só na hora do PDF, para caber em A4. [web:100][web:117] */
-    .pdf-fixed-width {
-      width: 900px !important;
-      max-width: 900px !important;
-      margin: 0 auto;
-    }
-
     .header { background: var(--violet-dk); padding: 28px 36px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
     .header-left { display: flex; align-items: flex-end; gap: 20px; }
     .logo-top { font-family: 'DM Serif Display', serif; font-size: 12px; letter-spacing: .14em; color: #c4b5fd; text-transform: uppercase; }
@@ -612,14 +605,11 @@ function downloadPDF() {
     return;
   }
 
-  const wrapper      = document.getElementById('pdfWrapper');
-  const element      = wrapper;
+  const element      = document.getElementById('pdfWrapper');
   const nome         = document.getElementById('hNome').textContent  || 'Aluno';
   const turma        = document.getElementById('hTurma').textContent || 'Turma';
   const filenameSafe = (turma + ' - ' + nome).replace(/[\/\\:*?"<>|]/g, '_');
 
-  // força largura fixa para captura, independente do zoom [web:100][web:117]
-  wrapper.classList.add('pdf-fixed-width');
   document.body.classList.add('printing');
 
   const opt = {
@@ -628,8 +618,7 @@ function downloadPDF() {
     image:       { type: 'jpeg', quality: 0.98 },
     html2canvas: {
       scale:   2,
-      useCORS: true,
-      width:   900
+      useCORS: true
     },
     jsPDF: {
       unit:        'mm',
@@ -644,15 +633,13 @@ function downloadPDF() {
     .save()
     .then(() => {
       document.body.classList.remove('printing');
-      wrapper.classList.remove('pdf-fixed-width');
     })
     .catch(() => {
       document.body.classList.remove('printing');
-      wrapper.classList.remove('pdf-fixed-width');
     });
 }
 
-// Redesenha o radar quando a janela é redimensionada (zoom) [web:175]
+// Redesenha o radar quando a janela é redimensionada (inclui mudança de zoom em muitos navegadores)
 let radarResizeTimeout = null;
 window.addEventListener('resize', () => {
   if (!radarChart) return;
