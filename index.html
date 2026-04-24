@@ -102,19 +102,6 @@
     body.printing .no-print {
       display: none !important;
     }
-
-    /* Estilos específicos para o wrapper durante geração de PDF */
-    body.printing #pdfWrapper {
-      width: 794px !important;
-      max-width: 794px !important;
-      margin: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
-    body.printing #pdfWrapper .grid-2 {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-    }
   </style>
 </head>
 <body>
@@ -381,7 +368,6 @@ function parsePlanilha(text) {
     break;
   }
 
-  // Busca "Teacher:" em QUALQUER celula das primeiras 5 linhas (robusto a colunas vazias intercaladas)
   let teacher = '';
   for (let li = 0; li < Math.min(5, rawLines.length); li++) {
     const cols = splitLine(rawLines[li] || '');
@@ -393,6 +379,7 @@ function parsePlanilha(text) {
     }
     if (teacher) break;
   }
+
   const headers = linha3.map(h => norm(h));
 
   const alunos = [];
@@ -428,7 +415,12 @@ async function loadDataForConfig(config) {
     const totalKey = parsed2.headers.includes(norm('TOTAL DE AULAS')) ? norm('TOTAL DE AULAS') : null;
     const totalAulasVal = (parsed2.alunos.length > 0 && totalKey) ? n(parsed2.alunos[0][totalKey] || 0) : 0;
 
-    metaTurma = { turma: parsed1.turma || parsed2.turma, dias: parsed1.dias || parsed2.dias, teacher: parsed1.teacher || parsed2.teacher, totalAulas: totalAulasVal };
+    metaTurma = { 
+      turma:   parsed1.turma || parsed2.turma, 
+      dias:    parsed1.dias || parsed2.dias, 
+      teacher: parsed1.teacher || parsed2.teacher, 
+      totalAulas: totalAulasVal 
+    };
 
     if (habData.length === 0) throw new Error('Nenhum aluno encontrado nesta turma.');
 
@@ -611,15 +603,13 @@ function downloadPDF() {
   document.body.classList.add('printing');
 
   const opt = {
-    margin:      [8, 8, 8, 8],
+    margin:      [5, 5, 5, 5],
     filename:    filenameSafe + '.pdf',
-    image:       { type: 'jpeg', quality: 0.97 },
+    image:       { type: 'jpeg', quality: 0.98 },
     html2canvas: {
-      scale:       1.5,
-      useCORS:     true,
-      windowWidth: 900,
-      scrollX:     0,
-      scrollY:     0
+      scale:   2,
+      useCORS: true,
+      width:   800
     },
     jsPDF: {
       unit:        'mm',
@@ -632,10 +622,13 @@ function downloadPDF() {
     .set(opt)
     .from(element)
     .save()
-    .then(function() { document.body.classList.remove('printing'); })
-    .catch(function() { document.body.classList.remove('printing'); });
+    .then(() => {
+      document.body.classList.remove('printing');
+    })
+    .catch(() => {
+      document.body.classList.remove('printing');
+    });
 }
-
 
 initTurmas();
 </script>
