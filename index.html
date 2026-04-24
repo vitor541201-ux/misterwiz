@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Biblioteca para gerar PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -102,6 +101,19 @@
 
     body.printing .no-print {
       display: none !important;
+    }
+
+    /* Estilos específicos para o wrapper durante geração de PDF */
+    body.printing #pdfWrapper {
+      width: 794px !important;
+      max-width: 794px !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    body.printing #pdfWrapper .grid-2 {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
     }
   </style>
 </head>
@@ -246,9 +258,6 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-// Configuração das turmas (KIDS em cima, TEENS embaixo)
-// ════════════════════════════════════════════════
 const TURMAS = [
   // KIDS
   {
@@ -281,7 +290,6 @@ const TURMAS = [
     csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQCi_aeQp3eQs5wLBfzW3cCwpn60H4zi-3NE3c_AUi-WRxukA4o7tpH-21Az2vClxbU4A4Y6fTWOIlm/pub?gid=363435231&single=true&output=csv",
     csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQCi_aeQp3eQs5wLBfzW3cCwpn60H4zi-3NE3c_AUi-WRxukA4o7tpH-21Az2vClxbU4A4Y6fTWOIlm/pub?gid=0&single=true&output=csv"
   },
-
   // TEENS
   {
     id: "teens1_seg_1230",
@@ -331,9 +339,7 @@ function fmt(val) {
 
 async function fetchCSV(url) {
   const r = await fetch(url);
-  if (!r.ok) {
-    throw new Error('Não foi possível acessar a planilha. Status: ' + r.status);
-  }
+  if (!r.ok) throw new Error('Não foi possível acessar a planilha. Status: ' + r.status);
   return r.text();
 }
 
@@ -354,19 +360,14 @@ function parsePlanilha(text) {
     const cols = []; let cur = '', inQ = false;
     for (const c of line) {
       if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) {
-        cols.push(cur.replace(/\r/g,'').trim());
-        cur = '';
-      } else {
-        cur += c;
-      }
+      else if (c === ',' && !inQ) { cols.push(cur.replace(/\r/g,'').trim()); cur = ''; }
+      else { cur += c; }
     }
     cols.push(cur.replace(/\r/g,'').trim());
     return cols;
   }
 
   const linha0 = splitLine(rawLines[0] || '');
-  const linha1 = splitLine(rawLines[1] || '');
   const linha2 = splitLine(rawLines[2] || '');
   const linha3 = splitLine(rawLines[3] || '');
 
@@ -382,7 +383,6 @@ function parsePlanilha(text) {
 
   const teacherCell = linha2.find(c => (c || '').toLowerCase().includes('teacher')) || '';
   const teacher = teacherCell.replace(/teacher\s*[:\-]?\s*/i, '').trim();
-
   const headers = linha3.map(h => norm(h));
 
   const alunos = [];
@@ -390,10 +390,8 @@ function parsePlanilha(text) {
     const cols = splitLine(rawLines[i]);
     const obj = {};
     headers.forEach((h, j) => { obj[h] = (cols[j] || '').trim(); });
-
     const nome = obj[norm('NOME')] || '';
     if (!nome || nome.toUpperCase().includes('RESUMO')) continue;
-
     alunos.push(obj);
   }
 
@@ -410,36 +408,21 @@ async function loadDataForConfig(config) {
     studentSelect.disabled = true;
     studentSelect.innerHTML = '<option value="">— carregando alunos —</option>';
 
-    const [t1, t2] = await Promise.all([
-      fetchCSV(config.csvHabilidades),
-      fetchCSV(config.csvEngajamento)
-    ]);
-
+    const [t1, t2] = await Promise.all([fetchCSV(config.csvHabilidades), fetchCSV(config.csvEngajamento)]);
     const parsed1 = parsePlanilha(t1);
     const parsed2 = parsePlanilha(t2);
 
     habData = parsed1.alunos;
     engData = parsed2.alunos;
 
-    const totalKey = parsed2.headers.includes(norm('TOTAL DE AULAS'))
-      ? norm('TOTAL DE AULAS')
-      : null;
+    const totalKey = parsed2.headers.includes(norm('TOTAL DE AULAS')) ? norm('TOTAL DE AULAS') : null;
+    const totalAulasVal = (parsed2.alunos.length > 0 && totalKey) ? n(parsed2.alunos[0][totalKey] || 0) : 0;
 
-    const totalAulasVal = (parsed2.alunos.length > 0 && totalKey)
-      ? n(parsed2.alunos[0][totalKey] || 0)
-      : 0;
-
-    metaTurma = {
-      turma:      parsed1.turma,
-      dias:       parsed1.dias,
-      teacher:    parsed1.teacher,
-      totalAulas: totalAulasVal,
-    };
+    metaTurma = { turma: parsed1.turma, dias: parsed1.dias, teacher: parsed1.teacher, totalAulas: totalAulasVal };
 
     if (habData.length === 0) throw new Error('Nenhum aluno encontrado nesta turma.');
 
     document.getElementById('turmaTag').textContent = metaTurma.turma || config.label;
-
     studentSelect.disabled = false;
     studentSelect.innerHTML = '<option value="">— selecione um aluno —</option>';
     habData.forEach((row, i) => {
@@ -451,7 +434,6 @@ async function loadDataForConfig(config) {
 
     msg.textContent = `✓ ${habData.length} aluno(s) carregado(s) para esta turma.`;
     setTimeout(() => { msg.style.display = 'none'; }, 4000);
-
   } catch(e) {
     console.error(e);
     msg.innerHTML = `⚠️ Erro: <strong>${e.message}</strong><br><small>Verifique se a planilha está publicada como CSV.</small>`;
@@ -464,7 +446,6 @@ async function loadDataForConfig(config) {
 function changeTurma() {
   const turmaId = document.getElementById('turmaSelect').value;
   const page = document.getElementById('reportPage');
-
   page.classList.remove('visible');
 
   const msg = document.getElementById('stateMsg');
@@ -480,22 +461,17 @@ function changeTurma() {
 
   const cfg = TURMAS.find(t => t.id === turmaId);
   if (!cfg) return;
-
   currentConfig = cfg;
   loadDataForConfig(cfg);
 }
 
 function renderStudent() {
   const sel = document.getElementById('studentSelect');
-  if (sel.disabled || sel.value === '') {
-    alert('Selecione uma turma e um aluno primeiro.');
-    return;
-  }
+  if (sel.disabled || sel.value === '') { alert('Selecione uma turma e um aluno primeiro.'); return; }
 
   const hab  = habData[sel.value];
   const nome = hab[norm('NOME')] || '';
-
-  const eng = engData.find(r => norm(r[norm('NOME')] || '') === norm(nome)) || {};
+  const eng  = engData.find(r => norm(r[norm('NOME')] || '') === norm(nome)) || {};
 
   const fala      = n(hab[norm('FALA')]);
   const audicao   = n(hab[norm('AUDIÇÃO')]);
@@ -509,12 +485,10 @@ function renderStudent() {
   const engajamento     = n(eng[norm('ENGAJAMENTO')] || 0);
   const presencaNota    = n(eng[norm('PRESENÇA')] || 0);
 
-  const totalAulas = metaTurma.totalAulas;
-
+  const totalAulas  = metaTurma.totalAulas;
   const presencaPct = totalAulas > 0 ? Math.round(((totalAulas - faltas) / totalAulas) * 100) : 0;
   const assistidas  = totalAulas > 0 ? totalAulas - faltas : '—';
-
-  const periodo = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const periodo     = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
   document.getElementById('hNome').textContent    = nome;
   document.getElementById('hPeriod').textContent  = metaTurma.dias ? metaTurma.dias + ' · ' + periodo : periodo;
@@ -528,12 +502,12 @@ function renderStudent() {
   document.getElementById('statAssistidas').textContent = assistidas;
 
   function setEng(pId, bId, v) {
-    document.getElementById(pId).textContent  = fmt(v);
-    document.getElementById(bId).style.width  = (v / 5 * 100) + '%';
+    document.getElementById(pId).textContent = fmt(v);
+    document.getElementById(bId).style.width = (v / 5 * 100) + '%';
   }
-  setEng('engPresenca',        'engPresencaBar',       presencaNota);
-  setEng('engEngajamento',     'engEngajamentoBar',    engajamento);
-  setEng('engDesenvolvimento', 'engDesenvolvimentoBar', desenvolvimento);
+  setEng('engPresenca',        'engPresencaBar',        presencaNota);
+  setEng('engEngajamento',     'engEngajamentoBar',      engajamento);
+  setEng('engDesenvolvimento', 'engDesenvolvimentoBar',  desenvolvimento);
 
   function setBar(vId, bId, v) {
     document.getElementById(vId).textContent = fmt(v);
@@ -554,10 +528,8 @@ function renderStudent() {
   });
 
   function mc(field) {
-    const key = norm(field);
-    const vals = habData
-      .map(r => n(r[key] || 0))
-      .filter(v => v > 0);
+    const key  = norm(field);
+    const vals = habData.map(r => n(r[key] || 0)).filter(v => v > 0);
     return vals.length ? vals.reduce((a,b) => a+b,0) / vals.length : 0;
   }
   const mt = [mc('FALA'), mc('AUDIÇÃO'), mc('LEITURA'), mc('ESCRITA'), mc('GRAMÁTICA')];
@@ -621,34 +593,51 @@ function downloadPDF() {
     return;
   }
 
-  const element = document.getElementById('pdfWrapper');
-  const nome = document.getElementById('hNome').textContent || 'Aluno';
-  const turma = document.getElementById('hTurma').textContent || 'Turma';
+  const element   = document.getElementById('pdfWrapper');
+  const nome      = document.getElementById('hNome').textContent  || 'Aluno';
+  const turma     = document.getElementById('hTurma').textContent || 'Turma';
   const filenameSafe = `${turma} - ${nome}`.replace(/[\\\/:*?"<>|]/g, '_');
 
+  // Ativa modo impressão (esconde botões .no-print)
   document.body.classList.add('printing');
 
+  // Salva estado original e força largura A4 (794px = 210mm @ 96dpi)
+  const origWidth    = element.style.width;
+  const origMaxWidth = element.style.maxWidth;
+  const origMargin   = element.style.margin;
+  element.style.width    = '794px';
+  element.style.maxWidth = '794px';
+  element.style.margin   = '0';
+
   const opt = {
-    margin:       [5, 5, 5, 5],
-    filename:     `${filenameSafe}.pdf`,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  {
-      scale: 2,
-      useCORS: true,
-      width: 800
+    margin:      0,
+    filename:    `${filenameSafe}.pdf`,
+    image:       { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale:       2,
+      useCORS:     true,
+      width:       794,
+      windowWidth: 794,
+      scrollX:     0,
+      scrollY:     -window.scrollY
     },
-    jsPDF:        {
-      unit: 'mm',
-      format: 'a4',
-      orientation: 'portrait'
+    jsPDF: {
+      unit:        'px',
+      format:      [794, 1123],   // A4 em px @ 96dpi
+      orientation: 'portrait',
+      hotfixes:    ['px_scaling']
     }
   };
 
-  html2pdf().set(opt).from(element).save().then(() => {
+  html2pdf().set(opt).from(element).save()
+    .then(restore).catch(restore);
+
+  function restore() {
+    element.style.width    = origWidth;
+    element.style.maxWidth = origMaxWidth;
+    element.style.margin   = origMargin;
     document.body.classList.remove('printing');
-  }).catch(() => {
-    document.body.classList.remove('printing');
-  });
+  }
 }
 
 initTurmas();
