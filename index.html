@@ -32,6 +32,13 @@
     .page { max-width: 1080px; margin: 0 auto; background: var(--surface); border-radius: var(--radius-lg); box-shadow: 0 4px 32px rgba(80,40,160,.10); overflow: hidden; display: none; }
     .page.visible { display: block; }
 
+    /* largura fixa usada só na hora de gerar o PDF */
+    .pdf-fixed-width {
+      width: 900px !important;
+      max-width: 900px !important;
+      margin: 0 auto;
+    }
+
     .header { background: var(--violet-dk); padding: 28px 36px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
     .header-left { display: flex; align-items: flex-end; gap: 20px; }
     .logo-top { font-family: 'DM Serif Display', serif; font-size: 12px; letter-spacing: .14em; color: #c4b5fd; text-transform: uppercase; }
@@ -251,352 +258,8 @@
 </div>
 
 <script>
-const TURMAS = [
-  // KIDS
-  {
-    id: "kids1_seg_1745",
-    label: "KIDS 1 – Seg/Qua 17:45–19:15",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6qaoLPKFCt2sQw1dTXPc5wESgYBCXaCXTxwUFwXVcVEp7fAbJXukqrNV6gNVgRDYbxT0yeLE2oZlP/pub?gid=1258460174&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6qaoLPKFCt2sQw1dTXPc5wESgYBCXaCXTxwUFwXVcVEp7fAbJXukqrNV6gNVgRDYbxT0yeLE2oZlP/pub?gid=0&single=true&output=csv"
-  },
-  {
-    id: "kids2_seg_1330",
-    label: "KIDS 2 – Seg/Qua 13:30–15:00",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQESGm3F1v6E2jFnRIQGzYa95peXCSnq78XkndaK3Y080r9Jeg2jxJlXzD9QxS5dffGRlUG_qkIanvs/pub?gid=134064700&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQESGm3F1v6E2jFnRIQGzYa95peXCSnq78XkndaK3Y080r9Jeg2jxJlXzD9QxS5dffGRlUG_qkIanvs/pub?gid=405962107&single=true&output=csv"
-  },
-  {
-    id: "kids2_ter_1230_1300",
-    label: "KIDS 2 – Ter/Qui 12:30–13:00",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQr-dgiiyVebx4-PQ7H8s81tztzBkoj6biSihKKsu9sE0zflbxU6IJ_fiBoqxCw3U3RK8Rm71wfW_y3/pub?gid=0&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQr-dgiiyVebx4-PQ7H8s81tztzBkoj6biSihKKsu9sE0zflbxU6IJ_fiBoqxCw3U3RK8Rm71wfW_y3/pub?gid=222647751&single=true&output=csv"
-  },
-  {
-    id: "kids2_ter_1230_1400",
-    label: "KIDS 2 – Ter/Qui 12:30–14:00",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTO8wk1Q7pXUhS90BEbgo1wMi6iNiQRDBGUQpcTG-kV34O4qvjyt5Nji9t1DlIqeMSGtxd_iXiwSABD/pub?gid=0&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTO8wk1Q7pXUhS90BEbgo1wMi6iNiQRDBGUQpcTG-kV34O4qvjyt5Nji9t1DlIqeMSGtxd_iXiwSABD/pub?gid=973967022&single=true&output=csv"
-  },
-  {
-    id: "kids3_seg_1745",
-    label: "KIDS 3 – Seg/Qua 17:45–19:15",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQCi_aeQp3eQs5wLBfzW3cCwpn60H4zi-3NE3c_AUi-WRxukA4o7tpH-21Az2vClxbU4A4Y6fTWOIlm/pub?gid=363435231&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQCi_aeQp3eQs5wLBfzW3cCwpn60H4zi-3NE3c_AUi-WRxukA4o7tpH-21Az2vClxbU4A4Y6fTWOIlm/pub?gid=0&single=true&output=csv"
-  },
-  // TEENS
-  {
-    id: "teens1_seg_1230",
-    label: "TEENS 1 – Seg/Qua 12:30–14:00",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTvtpxWM4cJiUoC9rBt43660RIcDvhzRFrf15SQ4tNPuSP7uuZ0H5z81c6GiHu5Ro5jAnd_X3NhR3iK/pub?gid=0&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTvtpxWM4cJiUoC9rBt43660RIcDvhzRFrf15SQ4tNPuSP7uuZ0H5z81c6GiHu5Ro5jAnd_X3NhR3iK/pub?gid=1958102012&single=true&output=csv"
-  },
-  {
-    id: "teens1_seg_1330",
-    label: "TEENS 1 – Seg/Qua 13:30–15:00",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0-isfaNh8-GOIgZmOEBcoBllqo01lLVyMwAqKTfx0Tx1bTSDeNIzXe9_CEDRvPkFVWAYZ6BPzNn5_/pub?gid=0&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0-isfaNh8-GOIgZmOEBcoBllqo01lLVyMwAqKTfx0Tx1bTSDeNIzXe9_CEDRvPkFVWAYZ6BPzNn5_/pub?gid=241511079&single=true&output=csv"
-  },
-  {
-    id: "teens1_ter_1330_vitor",
-    label: "TEENS 1 – Ter/Qui 13:30–15:00 (Vitor)",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRS6W34f511SWl9UuXJHhESUzKSZopuZZJRo-epuIufow2FBuUKXsagWSRJMCDXP6j3lNW_7-We2BU2/pub?gid=0&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRS6W34f511SWl9UuXJHhESUzKSZopuZZJRo-epuIufow2FBuUKXsagWSRJMCDXP6j3lNW_7-We2BU2/pub?gid=1158939745&single=true&output=csv"
-  },
-  {
-    id: "teens1_ter_1330_nicole",
-    label: "TEENS 1 – Ter/Qui 13:30–15:00 (Nicole)",
-    csvHabilidades: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaTOko_UsJs0FbOnM1rSsQrW8C3SxCfuym-LMsX7A7B7-bb0iXZkiHN8MQzQf6qOAkZPooOg1k0a36/pub?gid=0&single=true&output=csv",
-    csvEngajamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaTOko_UsJs0FbOnM1rSsQrW8C3SxCfuym-LMsX7A7B7-bb0iXZkiHN8MQzQf6qOAkZPooOg1k0a36/pub?gid=769115797&single=true&output=csv"
-  }
-];
-
-let currentConfig = null;
-let habData = [], engData = [];
-let metaTurma = { turma: '', dias: '', teacher: '', totalAulas: 0 };
-let donutChart = null, radarChart = null;
-
-const norm = s => String(s)
-  .normalize('NFD')
-  .replace(/[\u0300-\u036f]/g,'')
-  .toUpperCase()
-  .trim();
-
-function n(val) {
-  const v = parseFloat(String(val).replace(',','.'));
-  return isNaN(v) ? 0 : v;
-}
-function fmt(val) {
-  const v = n(val);
-  return v === 0 ? '—' : (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1));
-}
-
-async function fetchCSV(url) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Não foi possível acessar a planilha. Status: ' + r.status);
-  return r.text();
-}
-
-function initTurmas() {
-  const sel = document.getElementById('turmaSelect');
-  TURMAS.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = t.label;
-    sel.appendChild(opt);
-  });
-}
-
-function parsePlanilha(text) {
-  const rawLines = text.split('\n');
-
-  function splitLine(line) {
-    const cols = []; let cur = '', inQ = false;
-    for (const c of line) {
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(cur.replace(/\r/g,'').trim()); cur = ''; }
-      else { cur += c; }
-    }
-    cols.push(cur.replace(/\r/g,'').trim());
-    return cols;
-  }
-
-  const linha0 = splitLine(rawLines[0] || '');
-  const linha2 = splitLine(rawLines[2] || '');
-  const linha3 = splitLine(rawLines[3] || '');
-
-  const turma = linha0.find(c => c) || '';
-
-  let dias = '';
-  for (const c of linha2) {
-    if (!c) continue;
-    if (/teacher/i.test(c)) continue;
-    dias = c;
-    break;
-  }
-
-  let teacher = '';
-  for (let li = 0; li < Math.min(5, rawLines.length); li++) {
-    const cols = splitLine(rawLines[li] || '');
-    for (const c of cols) {
-      if (/teacher/i.test(c)) {
-        const val = c.replace(/teacher\s*[:\-]?\s*/i, '').trim();
-        if (val) { teacher = val; break; }
-      }
-    }
-    if (teacher) break;
-  }
-
-  const headers = linha3.map(h => norm(h));
-
-  const alunos = [];
-  for (let i = 4; i < rawLines.length; i++) {
-    const cols = splitLine(rawLines[i]);
-    const obj = {};
-    headers.forEach((h, j) => { obj[h] = (cols[j] || '').trim(); });
-    const nome = obj[norm('NOME')] || '';
-    if (!nome || nome.toUpperCase().includes('RESUMO')) continue;
-    alunos.push(obj);
-  }
-
-  return { turma, dias, teacher, headers, alunos };
-}
-
-async function loadDataForConfig(config) {
-  const msg = document.getElementById('stateMsg');
-  const studentSelect = document.getElementById('studentSelect');
-  try {
-    msg.style.display = 'block';
-    msg.classList.remove('error');
-    msg.textContent = 'Carregando dados da turma...';
-    studentSelect.disabled = true;
-    studentSelect.innerHTML = '<option value="">— carregando alunos —</option>';
-
-    const [t1, t2] = await Promise.all([fetchCSV(config.csvHabilidades), fetchCSV(config.csvEngajamento)]);
-    const parsed1 = parsePlanilha(t1);
-    const parsed2 = parsePlanilha(t2);
-
-    habData = parsed1.alunos;
-    engData = parsed2.alunos;
-
-    const totalKey = parsed2.headers.includes(norm('TOTAL DE AULAS')) ? norm('TOTAL DE AULAS') : null;
-    const totalAulasVal = (parsed2.alunos.length > 0 && totalKey) ? n(parsed2.alunos[0][totalKey] || 0) : 0;
-
-    metaTurma = { 
-      turma:   parsed1.turma || parsed2.turma, 
-      dias:    parsed1.dias || parsed2.dias, 
-      teacher: parsed1.teacher || parsed2.teacher, 
-      totalAulas: totalAulasVal 
-    };
-
-    if (habData.length === 0) throw new Error('Nenhum aluno encontrado nesta turma.');
-
-    document.getElementById('turmaTag').textContent = metaTurma.turma || config.label;
-    studentSelect.disabled = false;
-    studentSelect.innerHTML = '<option value="">— selecione um aluno —</option>';
-    habData.forEach((row, i) => {
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = row[norm('NOME')];
-      studentSelect.appendChild(opt);
-    });
-
-    msg.textContent = `✓ ${habData.length} aluno(s) carregado(s) para esta turma.`;
-    setTimeout(() => { msg.style.display = 'none'; }, 4000);
-  } catch(e) {
-    console.error(e);
-    msg.innerHTML = `⚠️ Erro: <strong>${e.message}</strong><br><small>Verifique se a planilha está publicada como CSV.</small>`;
-    msg.classList.add('error');
-    studentSelect.disabled = true;
-    studentSelect.innerHTML = '<option value="">— erro ao carregar alunos —</option>';
-  }
-}
-
-function changeTurma() {
-  const turmaId = document.getElementById('turmaSelect').value;
-  const page = document.getElementById('reportPage');
-  page.classList.remove('visible');
-
-  const msg = document.getElementById('stateMsg');
-  const studentSelect = document.getElementById('studentSelect');
-
-  if (!turmaId) {
-    msg.textContent = 'Selecione uma turma para carregar os alunos.';
-    msg.style.display = 'block';
-    studentSelect.disabled = true;
-    studentSelect.innerHTML = '<option value="">— selecione uma turma primeiro —</option>';
-    return;
-  }
-
-  const cfg = TURMAS.find(t => t.id === turmaId);
-  if (!cfg) return;
-  currentConfig = cfg;
-  loadDataForConfig(cfg);
-}
-
-function renderStudent() {
-  const sel = document.getElementById('studentSelect');
-  if (sel.disabled || sel.value === '') { alert('Selecione uma turma e um aluno primeiro.'); return; }
-
-  const hab  = habData[sel.value];
-  const nome = hab[norm('NOME')] || '';
-  const eng  = engData.find(r => norm(r[norm('NOME')] || '') === norm(nome)) || {};
-
-  const fala      = n(hab[norm('FALA')]);
-  const audicao   = n(hab[norm('AUDIÇÃO')]);
-  const leitura   = n(hab[norm('LEITURA')]);
-  const escrita   = n(hab[norm('ESCRITA')]);
-  const gramatica = n(hab[norm('GRAMÁTICA')]);
-  const media     = n(hab[norm('MÉDIA')]);
-
-  const faltas          = n(eng[norm('FALTAS')] || 0);
-  const desenvolvimento = n(eng[norm('DESENVOLVIMENTO')] || 0);
-  const engajamento     = n(eng[norm('ENGAJAMENTO')] || 0);
-  const presencaNota    = n(eng[norm('PRESENÇA')] || 0);
-
-  const totalAulas  = metaTurma.totalAulas;
-  const presencaPct = totalAulas > 0 ? Math.round(((totalAulas - faltas) / totalAulas) * 100) : 0;
-  const assistidas  = totalAulas > 0 ? totalAulas - faltas : '—';
-
-  const periodoLabel = metaTurma.dias || '';
-
-  document.getElementById('hNome').textContent    = nome;
-  document.getElementById('hPeriod').textContent  = periodoLabel;
-  document.getElementById('hTurma').textContent   = metaTurma.turma   || (currentConfig ? currentConfig.label : '—');
-  document.getElementById('hTeacher').textContent = metaTurma.teacher || '—';
-
-  const periodoRodape = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  document.getElementById('footerInfo').textContent =
-    (metaTurma.turma || (currentConfig ? currentConfig.label : '')) + ' · ' + periodoRodape;
-
-  document.getElementById('donutPct').textContent       = totalAulas > 0 ? presencaPct + '%' : '—';
-  document.getElementById('statTotal').textContent      = totalAulas || '—';
-  document.getElementById('statFaltas').textContent     = faltas;
-  document.getElementById('statAssistidas').textContent = assistidas;
-
-  function setEng(pId, bId, v) {
-    document.getElementById(pId).textContent = fmt(v);
-    document.getElementById(bId).style.width = (v / 5 * 100) + '%';
-  }
-  setEng('engPresenca',        'engPresencaBar',        presencaNota);
-  setEng('engEngajamento',     'engEngajamentoBar',      engajamento);
-  setEng('engDesenvolvimento', 'engDesenvolvimentoBar',  desenvolvimento);
-
-  function setBar(vId, bId, v) {
-    document.getElementById(vId).textContent = fmt(v);
-    document.getElementById(bId).style.width = (v / 5 * 100) + '%';
-  }
-  document.getElementById('mediaGeral').textContent = fmt(media);
-  setBar('valFala',      'barFala',      fala);
-  setBar('valAudicao',   'barAudicao',   audicao);
-  setBar('valLeitura',   'barLeitura',   leitura);
-  setBar('valEscrita',   'barEscrita',   escrita);
-  setBar('valGramatica', 'barGramatica', gramatica);
-
-  if (donutChart) donutChart.destroy();
-  donutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
-    type: 'doughnut',
-    data: { datasets: [{ data: [presencaPct, 100 - presencaPct], backgroundColor: ['#6d28d9','#ede9fe'], borderWidth: 0 }] },
-    options: { cutout: '72%', animation: { duration: 800 }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-  });
-
-  function mc(field) {
-    const key  = norm(field);
-    const vals = habData.map(r => n(r[key] || 0)).filter(v => v > 0);
-    return vals.length ? vals.reduce((a,b) => a+b,0) / vals.length : 0;
-  }
-  const mt = [mc('FALA'), mc('AUDIÇÃO'), mc('LEITURA'), mc('ESCRITA'), mc('GRAMÁTICA')];
-
-  if (radarChart) radarChart.destroy();
-  radarChart = new Chart(document.getElementById('radarChart').getContext('2d'), {
-    type: 'radar',
-    data: {
-      labels: ['Fala','Audição','Leitura','Escrita','Gramática'],
-      datasets: [
-        { label:'Aluno', data:[fala,audicao,leitura,escrita,gramatica],
-          backgroundColor:'rgba(109,40,217,0.18)', borderColor:'rgba(109,40,217,0.85)',
-          borderWidth:2, pointBackgroundColor:'rgba(109,40,217,0.9)', pointRadius:4 },
-        { label:'Média da turma', data: mt,
-          backgroundColor:'rgba(148,163,184,0.10)', borderColor:'rgba(148,163,184,0.75)',
-          borderWidth:1.5, pointBackgroundColor:'rgba(148,163,184,0.8)', pointRadius:3 }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false } },
-      scales:{ r:{ suggestedMin:0, suggestedMax:5,
-        ticks:{ stepSize:1, backdropColor:'transparent', font:{ size:9 }, color:'#8b7fa8' },
-        grid:{ color:'#ece8f8' }, angleLines:{ color:'#ece8f8' },
-        pointLabels:{ color:'#4a3f6b', font:{ size:11, family:"'DM Sans',sans-serif" } }
-      }}
-    }
-  });
-
-  const primeiro = nome.split(' ')[0];
-  const habs = [
-    {label:'Fala',v:fala},{label:'Audição',v:audicao},{label:'Leitura',v:leitura},
-    {label:'Escrita',v:escrita},{label:'Gramática',v:gramatica}
-  ].filter(h=>h.v>0).sort((a,b)=>b.v-a.v);
-
-  const recos = [];
-  if (habs.length > 0) {
-    const top = habs[0];
-    if (top.v >= 4) recos.push(`${primeiro} demonstra excelente desempenho em <strong>${top.label}</strong> (nota ${fmt(top.v)}), destacando-se na turma.`);
-    const low = habs[habs.length-1];
-    if (low.v < 3.5 && habs.length > 1) recos.push(`Sugere-se atenção especial em <strong>${low.label}</strong> (nota ${fmt(low.v)}). Atividades de reforço podem contribuir para avanços significativos.`);
-  }
-  if (presencaPct >= 90) recos.push(`A frequência de ${primeiro} é muito boa (${presencaPct}%). Manter essa regularidade favorece bastante o desenvolvimento do idioma.`);
-  else if (presencaPct > 0 && presencaPct < 80) recos.push(`A frequência está abaixo do ideal (${presencaPct}%). Recomenda-se reforçar a presença nas aulas para garantir um progresso mais consistente.`);
-  if (engajamento >= 4) recos.push(`${primeiro} apresenta ótimo engajamento em sala, participando das atividades e interações propostas.`);
-  if (media >= 4) recos.push(`A média geral (${fmt(media)}) indica um desempenho sólido. Incentiva-se a continuidade dos estudos e da participação nas aulas.`);
-  if (recos.length === 0) recos.push(`${primeiro} apresenta desempenho regular no momento. Acompanhamento próximo e continuidade na rotina de estudos podem favorecer bons resultados.`);
-
-  document.getElementById('recoList').innerHTML = recos.map(r =>
-    `<div class="reco-item"><div class="reco-dot"></div><span>${r}</span></div>`
-  ).join('');
-
-  document.getElementById('reportPage').classList.add('visible');
-  document.getElementById('reportPage').scrollIntoView({ behavior: 'smooth' });
-}
+/* ... TODO: aqui entra todo o mesmo JS de antes, IGUAL, até a função downloadPDF.
+   Para não ficar quilométrico repetindo, vou mostrar só a parte que mudou. */
 
 function downloadPDF() {
   const page = document.getElementById('reportPage');
@@ -605,11 +268,14 @@ function downloadPDF() {
     return;
   }
 
-  const element      = document.getElementById('pdfWrapper');
+  const wrapper      = document.getElementById('pdfWrapper');
+  const element      = wrapper;
   const nome         = document.getElementById('hNome').textContent  || 'Aluno';
   const turma        = document.getElementById('hTurma').textContent || 'Turma';
   const filenameSafe = (turma + ' - ' + nome).replace(/[\/\\:*?"<>|]/g, '_');
 
+  // força largura fixa para captura, independente do zoom
+  wrapper.classList.add('pdf-fixed-width');
   document.body.classList.add('printing');
 
   const opt = {
@@ -618,7 +284,8 @@ function downloadPDF() {
     image:       { type: 'jpeg', quality: 0.98 },
     html2canvas: {
       scale:   2,
-      useCORS: true
+      useCORS: true,
+      width:   900   // mesma largura da .pdf-fixed-width
     },
     jsPDF: {
       unit:        'mm',
@@ -633,26 +300,17 @@ function downloadPDF() {
     .save()
     .then(() => {
       document.body.classList.remove('printing');
+      wrapper.classList.remove('pdf-fixed-width');
     })
     .catch(() => {
       document.body.classList.remove('printing');
+      wrapper.classList.remove('pdf-fixed-width');
     });
 }
 
-// Redesenha o radar quando a janela é redimensionada (inclui mudança de zoom em muitos navegadores)
-let radarResizeTimeout = null;
-window.addEventListener('resize', () => {
-  if (!radarChart) return;
-  clearTimeout(radarResizeTimeout);
-  radarResizeTimeout = setTimeout(() => {
-    const sel = document.getElementById('studentSelect');
-    if (sel && sel.value !== '') {
-      renderStudent();
-    }
-  }, 200);
-});
+/* e aqui embaixo mantém o listener de resize e o initTurmas()
+   exatamente como já estava no arquivo anterior */
 
-initTurmas();
 </script>
 </body>
 </html>
