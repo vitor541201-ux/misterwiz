@@ -603,65 +603,39 @@ function downloadPDF() {
     return;
   }
 
-  const element   = document.getElementById('pdfWrapper');
-  const nome      = document.getElementById('hNome').textContent  || 'Aluno';
-  const turma     = document.getElementById('hTurma').textContent || 'Turma';
-  const filenameSafe = `${turma} - ${nome}`.replace(/[\\\/:*?"<>|]/g, '_');
+  const element      = document.getElementById('pdfWrapper');
+  const nome         = document.getElementById('hNome').textContent  || 'Aluno';
+  const turma        = document.getElementById('hTurma').textContent || 'Turma';
+  const filenameSafe = (turma + ' - ' + nome).replace(/[\/\\:*?"<>|]/g, '_');
 
-  // Ativa modo impressão (esconde botões .no-print)
   document.body.classList.add('printing');
 
-  // Salva estado original e força largura A4 (794px = 210mm @ 96dpi)
-  const origWidth    = element.style.width;
-  const origMaxWidth = element.style.maxWidth;
-  const origMargin   = element.style.margin;
-  element.style.width    = '794px';
-  element.style.maxWidth = '794px';
-  element.style.margin   = '0';
+  const opt = {
+    margin:      [8, 8, 8, 8],
+    filename:    filenameSafe + '.pdf',
+    image:       { type: 'jpeg', quality: 0.97 },
+    html2canvas: {
+      scale:       1.5,
+      useCORS:     true,
+      windowWidth: 900,
+      scrollX:     0,
+      scrollY:     0
+    },
+    jsPDF: {
+      unit:        'mm',
+      format:      'a4',
+      orientation: 'portrait'
+    }
+  };
 
-  // Captura o canvas primeiro para saber a altura real do conteúdo
-  html2canvas(element, {
-    scale:       2,
-    useCORS:     true,
-    width:       794,
-    windowWidth: 794,
-    scrollX:     0,
-    scrollY:     -window.scrollY
-  }).then(canvas => {
-    const imgW  = 210; // mm - largura A4
-    const ratio = canvas.height / canvas.width;
-    const imgH  = Math.round(imgW * ratio);
-
-    const opt = {
-      margin:      0,
-      filename:    `${filenameSafe}.pdf`,
-      image:       { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale:       2,
-        useCORS:     true,
-        width:       794,
-        windowWidth: 794,
-        scrollX:     0,
-        scrollY:     -window.scrollY
-      },
-      jsPDF: {
-        unit:        'mm',
-        format:      [imgW, imgH],
-        orientation: 'portrait'
-      }
-    };
-
-    html2pdf().set(opt).from(element).save()
-      .then(restore).catch(restore);
-  }).catch(restore);
-
-  function restore() {
-    element.style.width    = origWidth;
-    element.style.maxWidth = origMaxWidth;
-    element.style.margin   = origMargin;
-    document.body.classList.remove('printing');
-  }
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .save()
+    .then(function() { document.body.classList.remove('printing'); })
+    .catch(function() { document.body.classList.remove('printing'); });
 }
+
 
 initTurmas();
 </script>
