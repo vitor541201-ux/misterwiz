@@ -29,8 +29,24 @@
     .state-msg { max-width: 1080px; margin: 32px auto; text-align: center; color: var(--ink-soft); font-size: 14px; }
     .state-msg.error { color: #b91c1c; background: #fef2f2; border-radius: var(--radius-md); padding: 16px; }
 
-    .page { max-width: 1080px; margin: 0 auto; background: var(--surface); border-radius: var(--radius-lg); box-shadow: 0 4px 32px rgba(80,40,160,.10); overflow: hidden; display: none; }
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 32px rgba(80,40,160,.10);
+      overflow: hidden;
+      display: none;
+      position: relative; /* importante para captura estável no pdf */
+    }
     .page.visible { display: block; }
+
+    /* largura fixa usada só na hora de gerar o PDF, para independência da tela/zoom [web:97][web:184] */
+    .pdf-fixed-width {
+      width: 900px !important;
+      max-width: 900px !important;
+      margin: 0 auto;
+    }
 
     .header { background: var(--violet-dk); padding: 28px 36px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
     .header-left { display: flex; align-items: flex-end; gap: 20px; }
@@ -561,7 +577,9 @@ function renderStudent() {
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
+      responsive:true,
+      maintainAspectRatio:false,
+      devicePixelRatio: 1, // ajuda a evitar blur em zooms diferentes [web:187][web:186]
       plugins:{ legend:{ display:false } },
       scales:{ r:{ suggestedMin:0, suggestedMax:5,
         ticks:{ stepSize:1, backdropColor:'transparent', font:{ size:9 }, color:'#8b7fa8' },
@@ -605,11 +623,14 @@ function downloadPDF() {
     return;
   }
 
-  const element      = document.getElementById('pdfWrapper');
+  const wrapper      = document.getElementById('pdfWrapper');
+  const element      = wrapper;
   const nome         = document.getElementById('hNome').textContent  || 'Aluno';
   const turma        = document.getElementById('hTurma').textContent || 'Turma';
   const filenameSafe = (turma + ' - ' + nome).replace(/[\/\\:*?"<>|]/g, '_');
 
+  // Força layout fixo para o PDF, independente da tela/zoom. [web:97][web:184][web:188]
+  wrapper.classList.add('pdf-fixed-width');
   document.body.classList.add('printing');
 
   const opt = {
@@ -617,8 +638,11 @@ function downloadPDF() {
     filename:    filenameSafe + '.pdf',
     image:       { type: 'jpeg', quality: 0.98 },
     html2canvas: {
-      scale:   2,
-      useCORS: true
+      scale:   2,    // alta resolução, menos sensível ao zoom [web:190]
+      useCORS: true,
+      width:   900,  // mesma largura da .pdf-fixed-width
+      scrollX: 0,
+      scrollY: 0
     },
     jsPDF: {
       unit:        'mm',
@@ -633,13 +657,15 @@ function downloadPDF() {
     .save()
     .then(() => {
       document.body.classList.remove('printing');
+      wrapper.classList.remove('pdf-fixed-width');
     })
     .catch(() => {
       document.body.classList.remove('printing');
+      wrapper.classList.remove('pdf-fixed-width');
     });
 }
 
-// Redesenha o radar quando a janela é redimensionada (inclui mudança de zoom em muitos navegadores)
+// Redesenha o radar quando a janela é redimensionada (inclui mudança de zoom). [web:175]
 let radarResizeTimeout = null;
 window.addEventListener('resize', () => {
   if (!radarChart) return;
