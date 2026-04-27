@@ -21,7 +21,7 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 14px;
       line-height: 1.55;
-      padding: 24px 16px 32px; /* menos margem vertical para usar mais a folha */
+      padding: 24px 16px 32px;
     }
 
     .top-bar { max-width: 1080px; margin: 0 auto 24px; }
@@ -48,7 +48,6 @@
     }
     .page.visible { display: block; }
 
-    /* largura fixa para o PDF, agora 980px para ocupar mais a A4 [web:97][web:200] */
     .pdf-fixed-width {
       width: 980px !important;
       max-width: 980px !important;
@@ -65,20 +64,15 @@
     .h-sub { font-size: 12px; color: #e5e7eb; margin-top: 3px; }
 
     .header-right { text-align: right; }
-    .h-lbl {
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: #e9d5ff;
-    }
+    .h-lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #e9d5ff; }
     .h-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: #fff; margin-bottom: 4px; }
 
-    .body { padding: 20px 24px 20px; } /* antes 24 / 28 / 26 */
+    .body { padding: 20px 24px 20px; }
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;           /* antes 16 */
-      margin-bottom: 12px; /* antes 16 */
+      gap: 14px;
+      margin-bottom: 12px;
     }
     .card { background: var(--card); border: 1px solid #ece8f8; border-radius: var(--radius-md); padding: 16px 18px; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -122,8 +116,31 @@
     .reco-item:last-child { margin-bottom: 0; }
     .reco-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); flex-shrink: 0; margin-top: 6px; }
 
-    .footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid #f0ecfb; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--ink-soft); }
-    .footer-logo { font-family: 'DM Serif Display', serif; font-size: 14px; color: var(--violet); }
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f0ecfb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+    }
+    .footer-logo img {
+      height: 36px;
+      width: auto;
+      display: block;
+      border-radius: 6px;
+      background: #1a1228;
+      padding: 3px 8px;
+      /* leve sombra para destacar no fundo branco */
+      box-shadow: 0 1px 6px rgba(26,18,40,0.18);
+    }
 
     .no-print { }
 
@@ -271,7 +288,10 @@
       </div>
 
       <div class="footer">
-        <span class="footer-logo">MisterWiz</span>
+        <!-- Logo oficial Mister Wiz -->
+        <span class="footer-logo">
+          <img src="data:image/png;base64,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" alt="MisterWiz">
+        </span>
         <span id="footerInfo">—</span>
       </div>
     </div>
@@ -658,7 +678,7 @@ function downloadPDF() {
     html2canvas: {
       scale:   2,
       useCORS: true,
-      width:   980,  // bate com .pdf-fixed-width
+      width:   980,
       scrollX: 0,
       scrollY: 0
     },
@@ -683,7 +703,6 @@ function downloadPDF() {
     });
 }
 
-// Redesenha o radar quando há resize/zoom
 let radarResizeTimeout = null;
 window.addEventListener('resize', () => {
   if (!radarChart) return;
