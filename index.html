@@ -15,7 +15,14 @@
       --violet: #6d28d9; --violet-lt: #ede9fe; --violet-md: #8b5cf6; --violet-dk: #4c1d95;
       --radius-sm: 8px; --radius-md: 14px; --radius-lg: 20px;
     }
-    body { background: var(--bg); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.55; padding: 32px 16px 48px; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 24px 16px 32px; /* menos margem vertical para usar mais a folha */
+    }
 
     .top-bar { max-width: 1080px; margin: 0 auto 24px; }
     .turma-tag { display: inline-block; padding: 6px 16px; background: var(--violet-dk); color: #c4b5fd; border-radius: 99px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px; }
@@ -41,10 +48,10 @@
     }
     .page.visible { display: block; }
 
-    /* largura fixa para o PDF, aumentada para 950px para ocupar mais a A4 [web:97] */
+    /* largura fixa para o PDF, agora 980px para ocupar mais a A4 [web:97][web:200] */
     .pdf-fixed-width {
-      width: 950px !important;
-      max-width: 950px !important;
+      width: 980px !important;
+      max-width: 980px !important;
       margin: 0 auto;
     }
 
@@ -66,8 +73,13 @@
     }
     .h-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: #fff; margin-bottom: 4px; }
 
-    .body { padding: 24px 28px 26px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .body { padding: 20px 24px 20px; } /* antes 24 / 28 / 26 */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;           /* antes 16 */
+      margin-bottom: 12px; /* antes 16 */
+    }
     .card { background: var(--card); border: 1px solid #ece8f8; border-radius: var(--radius-md); padding: 16px 18px; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .card-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--ink); }
@@ -110,7 +122,7 @@
     .reco-item:last-child { margin-bottom: 0; }
     .reco-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); flex-shrink: 0; margin-top: 6px; }
 
-    .footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid #f0ecfb; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--ink-soft); }
+    .footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid #f0ecfb; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--ink-soft); }
     .footer-logo { font-family: 'DM Serif Display', serif; font-size: 14px; color: var(--violet); }
 
     .no-print { }
@@ -118,7 +130,7 @@
     @media (max-width: 760px) {
       .header { flex-direction: column; align-items: flex-start; }
       .grid-2 { grid-template-columns: 1fr; }
-      .body { padding: 20px 16px 24px; }
+      .body { padding: 18px 14px 20px; }
     }
 
     body.printing .no-print {
@@ -646,7 +658,7 @@ function downloadPDF() {
     html2canvas: {
       scale:   2,
       useCORS: true,
-      width:   950,  // bate com .pdf-fixed-width
+      width:   980,  // bate com .pdf-fixed-width
       scrollX: 0,
       scrollY: 0
     },
